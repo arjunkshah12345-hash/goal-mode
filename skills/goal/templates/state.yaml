@@ -1,0 +1,111 @@
+# Portable goal-mode board (GoalBuddy v2-compatible)
+version: 2
+
+goal:
+  title: "<Goal title>"
+  slug: "<goal-slug>"
+  kind: open_ended # specific | open_ended | existing_plan | recovery | audit
+  tranche: "continuous execution until full original outcome is complete"
+  status: active # active | blocked | done
+  intake:
+    original_request: "<shortest faithful user request>"
+    interpreted_outcome: "<one sentence>"
+    input_shape: vague # vague | specific | existing_plan | recovery | audit
+    audience: unknown
+    authority: requested # requested | approved | inferred | needs_approval | blocked
+    proof_type: artifact # test | demo | artifact | metric | review | source_backed_answer | decision
+    completion_proof: "<observable signal>"
+    likely_misfire: "<wrong success mode>"
+    blind_spots_considered: []
+    existing_plan_facts: []
+
+rules:
+  pm_owns_state: true
+  one_active_task: true
+  max_write_workers: 1
+  no_implementation_without_worker_or_pm_task: true
+  no_completion_without_judge_or_pm_audit: true
+  planning_is_not_completion: true
+  queued_required_worker_blocks_completion: true
+  continuous_until_full_outcome: true
+  missing_input_or_credentials_do_not_stop_goal: true
+  preserve_and_validate_existing_plan: true
+  intake_misfire_must_be_audited: true
+
+agents:
+  # hats | installed | missing | unknown — portable mode defaults to hats (PM fallback)
+  scout: hats
+  worker: hats
+  judge: hats
+
+active_task: T001
+
+tasks:
+  - id: T001
+    type: scout
+    assignee: Scout
+    status: active
+    objective: "Map repo purpose, architecture, verification commands, and ranked improvement candidates."
+    inputs:
+      - README.md
+      - package.json
+      - docs
+      - tests
+    constraints:
+      - "Read-only."
+      - "Do not edit implementation files."
+    expected_output:
+      - "Repo map"
+      - "Verification commands"
+      - "Ranked candidates"
+      - "Candidate next tasks"
+    receipt: null
+
+  - id: T002
+    type: judge
+    assignee: Judge
+    status: queued
+    objective: "Select the first safe Worker slice with allowed_files, verify, and stop_if."
+    inputs:
+      - "T001 receipt"
+    constraints:
+      - "Read-only."
+      - "Prefer smallest verifiable slice that advances the outcome."
+    expected_output:
+      - "Chosen Worker objective"
+      - "allowed_files"
+      - "verify command"
+      - "stop_if conditions"
+    receipt: null
+
+  - id: T003
+    type: worker
+    assignee: Worker
+    status: queued
+    objective: "<filled by Judge>"
+    allowed_files: []
+    verify: ""
+    stop_if: []
+    constraints:
+      - "Stay inside allowed_files."
+      - "Run verify before marking done."
+    expected_output:
+      - "Implemented slice"
+      - "Verify result"
+    receipt: null
+
+  - id: T004
+    type: judge
+    assignee: Judge
+    status: queued
+    objective: "Audit T003 against completion proof; either queue next Worker or mark full_outcome_complete."
+    inputs:
+      - "All receipts"
+      - "goal.md completion proof"
+    constraints:
+      - "Read-only."
+      - "Do not mark complete if a required Worker remains."
+    expected_output:
+      - "Audit decision"
+      - "full_outcome_complete true|false"
+    receipt: null
