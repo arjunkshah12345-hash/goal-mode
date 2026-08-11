@@ -5,7 +5,7 @@ description: >
   run as a goal, or needs long-running / multi-step / vague / stalled work with a durable
   board, one active task, Scout/Judge/Worker hats, receipts, and continuous execution
   until the full outcome is proven complete. Also use for /goal-prep when they only want
-  the board compiled first. This skill is standalone — not GoalBuddy or any other product.
+  the board compiled first. Standalone skill — not tied to any other goal product.
 ---
 
 # Goal Mode
@@ -44,9 +44,9 @@ Do not edit product code or load other skills for implementation. Put real work 
 
 ```text
 docs/goals/<slug>/
-  goal.md       # charter (editable)
-  state.yaml    # board truth (wins on conflict)
-  notes/        # long receipts only
+ goal.md # charter (editable)
+ state.yaml # board truth (wins on conflict)
+ notes/ # long receipts only
 ```
 
 Copy from this skill’s `templates/`. Slug: short kebab (`fix-auth-flakes`).
@@ -102,21 +102,21 @@ Bias: users want **work done**, not a plan — unless they ask for planning-only
 
 ```yaml
 receipt:
-  summary: "<what happened>"
-  evidence: ["path or command"]
-  verify: "<command + result>"
-  next: "<task id or none>"
-  full_outcome_complete: false
+ summary: "<what happened>"
+ evidence: ["path or command"]
+ verify: "<command + result>"
+ next: "<task id or none>"
+ full_outcome_complete: false
 ```
 
 Long receipts go in `notes/<id>.md`. Final audit must map receipts → original outcome.
 
 ## Seed board
 
-1. **T001 Scout** — map repo, verify commands, ranked candidates  
-2. **T002 Judge** — first safe Worker slice  
-3. **T003 Worker** — implement (`allowed_files` / `verify` / `stop_if` from Judge)  
-4. **T004 Judge** — audit; next Worker or complete  
+1. **T001 Scout** — map repo, verify commands, ranked candidates 
+2. **T002 Judge** — first safe Worker slice 
+3. **T003 Worker** — implement (`allowed_files` / `verify` / `stop_if` from Judge) 
+4. **T004 Judge** — audit; next Worker or complete 
 
 See `references/board-shapes.md` for other kinds.
 
