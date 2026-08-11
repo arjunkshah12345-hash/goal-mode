@@ -1,5 +1,5 @@
-# Portable goal-mode board (GoalBuddy v2-compatible)
-version: 2
+# Goal Mode board — machine truth for docs/goals/<slug>/
+version: 1
 
 goal:
   title: "<Goal title>"
@@ -33,7 +33,7 @@ rules:
   intake_misfire_must_be_audited: true
 
 agents:
-  # hats | installed | missing | unknown — portable mode defaults to hats (PM fallback)
+  # hats = same-thread roles (default). installed = dedicated agents if your tool has them.
   scout: hats
   worker: hats
   judge: hats
