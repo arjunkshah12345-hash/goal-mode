@@ -1,8 +1,8 @@
 # Goal Mode
 
-Portable **/goal** for any coding agent — Cursor, Claude Code, Codex, OpenCode, Gemini CLI, Windsurf, Copilot, Cline, and friends.
+Independent **/goal** skill for any coding agent — Cursor, Claude Code, Codex, OpenCode, Gemini CLI, Windsurf, Copilot, Cline, and more.
 
-GoalBuddy-style autonomous work without requiring a tool-specific `/goal` slash command or dedicated Scout/Judge/Worker agents. One PM thread runs the loop; roles are **hats**, not separate processes.
+Not a plugin for any other product. Just a skill: durable board, one active task, Scout / Judge / Worker hats on the same thread, receipts, run until the outcome is proven.
 
 [![skills.sh](https://skills.sh/b/Supercompress/goal-mode)](https://skills.sh/Supercompress/goal-mode)
 
@@ -20,21 +20,11 @@ npx skills add Supercompress/goal-mode -g -a '*' -y
 
 ## Use
 
-Say any of:
-
 - `/goal <what you want done>`
 - `goal mode: <outcome>`
-- `run this as a goal until done: <outcome>`
+- `/goal-prep <outcome>` — board only, no product work yet
 
-The agent will create `docs/goals/<slug>/`, run intake → board → one active task → receipt → next task until the full outcome is proven complete.
-
-## What you get
-
-- Durable board: `docs/goals/<slug>/goal.md` + `state.yaml`
-- One active task at a time
-- Scout / Judge / Worker / PM roles (PM fallback when no subagents)
-- Receipts + completion audit
-- Works where native `/goal` does not exist
+Creates `docs/goals/<slug>/goal.md` + `state.yaml`, then executes slice-by-slice until `full_outcome_complete: true`.
 
 ## License
 
