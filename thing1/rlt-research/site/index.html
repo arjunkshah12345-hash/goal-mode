@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>From the Perceptron to the Recurrent Looped Transformer</title>
+<style>
+:root{--ink:#111418;--mut:#6b7280;--line:#e5e7eb;--acc:#2f6feb;--bg:#fff;--soft:#f6f7f9;--warn:#b45309;--bad:#c2410c}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased}
+main,header.hero,footer{max-width:880px;margin:0 auto;padding:0 24px}
+header.hero{padding:88px 24px 40px}
+.kicker{font:600 12px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--acc)}
+h1{font-size:clamp(30px,5.4vw,52px);line-height:1.08;letter-spacing:-.025em;font-weight:750;margin:18px 0 16px}
+h1 em{font-style:normal;color:var(--acc)}
+.sub{font-size:19px;color:var(--mut);max-width:640px}
+nav{display:flex;gap:4px;flex-wrap:wrap;margin-top:28px}
+nav a{font-size:13.5px;color:var(--ink);text-decoration:none;padding:7px 13px;border:1px solid var(--line);border-radius:999px}
+nav a:hover{border-color:var(--ink)}
+section{padding:56px 0;border-top:1px solid var(--line)}
+h2{font-size:13px;font-weight:650;letter-spacing:.12em;text-transform:uppercase;color:var(--acc);margin-bottom:22px}
+h3{font-size:21px;letter-spacing:-.01em;font-weight:700;margin-bottom:10px}
+p{margin-bottom:14px}
+.muted{color:var(--mut)}
+small,.fine{font-size:13px;color:var(--mut)}
+.lede{font-size:18px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:26px 0}
+.card{border:1px solid var(--line);border-radius:12px;padding:18px 18px 14px;background:var(--bg)}
+.card .n{font:600 11px ui-monospace,Menlo,monospace;color:var(--acc);letter-spacing:.12em}
+.card h4{font-size:15.5px;margin:8px 0 6px;font-weight:700}
+.card p{font-size:13.5px;color:var(--mut);margin:0}
+.eq{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:14px 0;overflow-x:auto;line-height:1.8}
+.eq b{color:var(--acc);font-weight:600}
+details{border-bottom:1px solid var(--line);padding:2px 0}
+details:last-child{border-bottom:none}
+summary{cursor:pointer;list-style:none;display:flex;gap:16px;align-items:baseline;padding:13px 2px}
+summary::-webkit-details-marker{display:none}
+summary .yr{font:650 13px ui-monospace,Menlo,monospace;color:var(--mut);min-width:52px}
+summary .t{font-weight:650;font-size:15.5px}
+summary .tag{margin-left:auto;font-size:11px;color:var(--mut);border:1px solid var(--line);padding:2px 9px;border-radius:999px;white-space:nowrap}
+details .body{padding:0 2px 16px 68px;color:var(--mut);font-size:14.5px;max-width:640px}
+details .body b{color:var(--ink)}
+.tag.hot{color:var(--acc);border-color:var(--acc)}
+.box{border:1px solid var(--line);border-radius:12px;padding:18px 20px;background:var(--soft);margin:20px 0}
+.box h4{font-size:14px;margin-bottom:8px}
+.box ul{margin:0 0 0 18px}
+.box li{font-size:14px;margin:5px 0;color:#374151}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em;background:var(--soft);padding:1px 5px;border-radius:5px}
+.tabs{display:flex;gap:6px;margin:24px 0 4px}
+.tab{font-size:13.5px;padding:8px 15px;border:1px solid var(--line);border-radius:999px;background:none;cursor:pointer;color:var(--mut)}
+.tab.on{border-color:var(--ink);color:var(--ink);font-weight:600}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 8px}
+.chip{font-size:12.5px;padding:5px 11px;border:1px solid var(--line);border-radius:999px;background:none;cursor:pointer;color:var(--mut)}
+.chip.on{color:var(--ink);border-color:var(--ink)}
+.chip .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px}
+#chart{margin:18px 0 6px}
+.bgroup{display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
+.bgroup:last-child{border-bottom:none}
+.blabel{font-size:13px;font-weight:600;line-height:1.3}
+.blabel small{display:block;font-weight:400;color:var(--mut)}
+.bars{display:flex;align-items:flex-end;gap:10px;height:130px}
+.bar{position:relative;flex:1;max-width:64px;border-radius:3px 3px 0 0;background:#9db4d0;transition:opacity .15s}
+.bar:nth-child(2){background:#7591b5}.bar:nth-child(3){background:#4c6f9e}.bar:nth-child(4){background:#26456e}
+.bar.off{opacity:.1}
+.bar .v{position:absolute;top:-19px;left:50%;transform:translateX(-50%);font:600 11px ui-monospace,Menlo,monospace;color:var(--ink);white-space:nowrap}
+.bar:hover{outline:1.5px solid var(--ink);outline-offset:1px}
+.bar.chancey{box-shadow:inset 0 0 0 1.5px var(--bad)}
+.legend{display:flex;gap:16px;font-size:12px;color:var(--mut);margin-top:6px;flex-wrap:wrap}
+.sw{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px}
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin:14px 0}
+th{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);text-align:right;padding:8px 10px;border-bottom:1.5px solid var(--ink);cursor:pointer;user-select:none;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+td:first-child{font-weight:600}
+tr.hl td{background:#eef3fe}
+.g{color:#15803d;font-weight:650}.b{color:var(--bad);font-weight:650}
+img.chart{width:100%;height:auto;border:1px solid var(--line);border-radius:12px;margin:14px 0}
+.verdict li{margin:9px 0}
+.foot{padding:44px 0 80px;color:var(--mut);font-size:13px}
+.foot a{color:var(--acc)}
+a{text-decoration:none;color:var(--acc)}
+#tip{position:fixed;pointer-events:none;background:var(--ink);color:#fff;font-size:12px;padding:6px 10px;border-radius:7px;opacity:0;transition:opacity .1s;z-index:9}
+</style>
+</head>
+<body>
+<header class="hero">
+  <p class="kicker">Research dossier · Sept 13, 2026 · independent benchmark included</p>
+  <h1>From the Perceptron to the<br><em>Recurrent Looped Transformer</em></h1>
+  <p class="sub">What the freshly-released, fast-going-viral <b>RLT</b> (Yifan Zhang, Sept&nbsp;12,&nbsp;2026) actually is — and how it behaves against six architectures spanning 65 years of sequence modeling, under one matched protocol.</p>
+  <nav>
+    <a href="#what">What is RLT?</a><a href="#history">65 years of recurrence</a><a href="#arch">How it works</a><a href="#bench">Benchmark</a><a href="#published">vs. published results</a><a href="#cost">Cost</a><a href="#verdict">Verdict</a>
+  </nav>
+</header>
+<section id="what">
+  <h2>What is RLT?</h2>
+  <p class="lede">The <b>Recurrent Looped Transformer</b> is a one-line change of philosophy: <em>stop treating a sequence as a wide parallel object, and start treating it as a long-running loop over a small, deep stack.</em></p>
+  <p>A standard Transformer reads all <span class="mono">T</span> tokens <b>in parallel</b> through a <b>fixed</b> number of layers <span class="mono">L</span> — a token at position 1000 touches exactly the same depth as a token at position 10. RLT instead <b>consumes tokens one at a time</b>, and at every step re-runs the <b>entire</b> L-block stack. The computation a token receives is no longer <span class="mono">L</span>: it is <span class="mono">L · t</span> — depth that <b>grows with the sequence itself</b>, paid in loop iterations instead of parameters.</p>
+  <div class="cards">
+    <div class="card"><p class="n">CLAIM 1 — TEMPORAL DEPTH</p><h4>Computation grows with t</h4><p>Looped re-processing gives each state a recurrent path whose depth scales with sequence length, not a fixed L. The paper shows it beats 48-block deep Transformers and co-trained RNNs on dense-association tasks.</p></div>
+    <div class="card"><p class="n">CLAIM 2 — LOOP-FREE INFERENCE</p><h4>Train recurrent, read parallel</h4><p>After training, RLT runs as a standard parallel Transformer with frozen blocks — no hidden state to carry. The loop is a training-time curriculum for the weights, not a runtime dependency.</p></div>
+    <div class="card"><p class="n">CLAIM 3 — SMALL IS VIABLE</p><h4>Params over FLOPs</h4><p>Trained to match parameter count (not compute) against deep baselines, small looped models reach long-horizon performance that FLOPs-matched shallow models cannot.</p></div>
+  </div>
+  <p class="fine">Viral context: released Sept 12, 2026 by Yifan Zhang (NVIDIA, prior work: the NAS/looped line) with code + weights. Reception splits exactly along its claims: people excited about "depth without parameters," skeptics pointing at the training-time cost and the narrowness of the synthetic evidence.</p>
+</section>
+<section id="history">
+  <h2>Take us back: 65 years of the recurrence idea</h2>
+  <p class="muted">Every entry below is one answer to the same question: <b>how should state flow through time?</b> RLT is the latest answer — recurrence, but with attention-grade hardware instead of a single vector.</p>
+  <div id="timeline"></div>
+  <p class="fine">Selection: the lineage that leads to RLT. Notable side branches (Hopfield networks, NTMs/DNCs, neural ODEs, Mamba/SSMs) omitted for focus — though note Mamba's selective state-space is the closest <em>linear-time</em> competitor; RLT is distinct in keeping full attention and re-running depth.</p>
+</section>
+<section id="arch">
+  <h2>How RLT works, mechanically</h2>
+  <p>RLT has three moving parts. A <b>causal encoder</b> reads the raw prefix in parallel and maintains a global memory bank of key/value states (one per decoder layer). A <b>looped decoder</b> processes one token at a time; its state <span class="mono">s<sub>t</sub></span> is produced by re-running the full decoder stack:</p>
+  <div class="eq"><b>h⁰</b> = Merge(E<sub>x<sub>t</sub></sub>, s<sub>t−1</sub>)&nbsp;&nbsp;→&nbsp;&nbsp;for i = 1…L: &nbsp;<b>hⁱ</b> = Blockⁱ( h<sup>i−1</sup>, <b>cross-attn( h<sup>i−1</sup>, M<sub>≤t</sub> )</b> )&nbsp;&nbsp;→&nbsp;&nbsp;<b>s<sub>t</sub></b> = h<sup>L</sup></div>
+  <p>Each decoder block fuses three information channels: <b>self-attention over the recurrent state</b>, <b>cross-attention into the encoder's global memory</b> (so the state can always look back at raw history without cramming it into one vector), and a <b>position-wise FFN</b>. Finally, a <b>readout head</b> (avg-pooled or learned-query attention) maps the final state to the output — and the whole thing is trained with <b>full BPTT</b> through every loop iteration.</p>
+  <div class="box">
+    <h4>The three claims, again — now in mechanism terms</h4>
+    <ul>
+      <li><b>Temporal depth:</b> s<sub>t</sub> = Block<sup>L</sup>(Block<sup>L−1</sup>(…Block¹(Merge(s<sub>t−1</sub>)))) — t−1 prior loop passes mean the state's effective path is L·t blocks deep.</li>
+      <li><b>Loop-free inference:</b> after training, the weights can be re-arranged into a standard parallel causal Transformer — inference needs no for-loop at all.</li>
+      <li><b>Small is viable:</b> with LE=LD=48 loops, a ~10M-param RLT is matched against a ~500M-param deep Transformer on parameter budget, and wins on long-horizon association tasks.</li>
+    </ul>
+  </div>
+  <p class="fine">Our scaled-down probe keeps all three: causal encoder + global K/V memory + looped decoder with full BPTT (see the benchmark section for exact dimensions).</p>
+</section>
+<section id="bench">
+  <h2>Independent benchmark: 1951 → 2026, one protocol</h2>
+  <p>Six architectures, each trained from scratch under one matched recipe:</p>
+  <div class="box">
+    <h4>Protocol (apples-to-apples by design)</h4>
+    <ul>
+      <li><b>Matched parameters:</b> every model lands at ~76–84K params (RLT: 75.0K — its encoder/decoder split forces the cost, and we matched <em>it</em> to the others, not the reverse).</li>
+      <li><b>Same data, same budget:</b> 2,500 steps, batch 64, Adam lr 3e-3, CPU, 3 seeds each; 2,048 held-out evaluation programs per length.</li>
+      <li><b>Two tasks:</b> <b>Parity</b> (binary state, chance 50%) with dense running-target supervision; <b>Five-state tracking</b> (compose 1–5 random permutations of a 5-element set, chance 20%) with sparse final-state supervision. Parity is in the RLT paper; five-state is the Universal Transformers composition probe, the same task family the paper scales up.</li>
+      <li><b>Contenders:</b> Elman RNN, LSTM, GRU (full BPTT), parallel Transformer (causal, sinusoidal positions), <b>Token-merge</b> (our faithful RLT ablation: recurrent decoder + merging, but self-attention only — no encoder, no cross-attention), and <b>RLT-style</b> (causal encoder → global K/V memory; looped decoder with cross-attention, sliding-window attention over the state cache, state feedback, full BPTT).</li>
+    </ul>
+  </div>
+  <p>Bar chart below is interactive — pick a task and a context length. A red outline means <span class="mono">= chance</span> (the model did not learn the task at that length).</p>
+  <div class="tabs"><button class="tab on" data-task="parity">Parity</button><button class="tab" data-task="five">Five-state</button></div>
+  <div class="chips" id="opsChips"></div>
+  <div id="chart"></div>
+  <div class="legend"><span><span class="sw" style="background:#9db4d0"></span>shorter</span><span><span class="sw" style="background:#26456e"></span>longer</span><span style="margin-left:auto">select lengths to compare →</span></div>
+  <img class="chart" src="../charts/accuracy_by_length.png" alt="Accuracy by length, all models" loading="lazy">
+  <img class="chart" src="../charts/length_generalization.png" alt="Length generalization curves" loading="lazy">
+  <div id="tableWrap"></div>
+</section>
+<section id="published">
+  <h2>Our probe vs. the paper's own numbers</h2>
+  <p>The RLT repo ships a synthetic study contributed by @AradhyeAgarwal: same tasks, ~79K params, 3 seeds, train at 32 ops, eval up to 128. Their setup trains at sparse final-token loss and does <b>not</b> match FLOPs. Ours matches their protocol as closely as CPU allows, with one deviation: dense running-target supervision on parity (sparse final-token parity never left chance for <em>any</em> architecture in 2,500 steps at our scale — see appendix note).</p>
+  <img class="chart" src="../charts/temporal_depth.png" alt="Temporal depth grows with sequence" loading="lazy">
+  <p>Directionally, our small-scale probe <b>agrees</b> with the paper's central result: at matched parameters, the parallel Transformer fails both state-tracking tasks (chance-level parity, ~31% five-state) while every recurrent/looped model solves them — and the Transformer's deficit is <em>compositional chaining</em>, not capacity.</p>
+  <p>But the probe also sharpens the story in two ways the paper doesn't stress:</p>
+  <div class="box">
+    <ul>
+      <li><b>The wins belong to recurrence, not to RLT's machinery.</b> A 1990 Elman RNN — one tanh layer — scores <b>100%</b> on both tasks at every evaluation length up to 4× the training length. RLT-style (89–100% five-state, 66% parity mean) does not beat it at this scale. The encoder-memory + looped-depth machinery is a bet that pays off at 10M+ params with L=48 loops; at 75K it is overhead.</li>
+      <li><b>RLT-style shows seed instability on parity.</b> One of three seeds never escaped chance (flat final loss), dragging the mean to 66% while the best seed hit 83% — visible in the seed-spread bands of the length-generalization chart. More machinery means more places for optimization to stall.</li>
+    </ul>
+  </div>
+  <div id="pubCompare"></div>
+</section>
+<section id="cost">
+  <h2>The cost side of the ledger</h2>
+  <img class="chart" src="../charts/cost_of_recurrence.png" alt="Training step cost" loading="lazy">
+  <p>Recurrence is not free: the sequential decoder loop makes RLT ~<b>4.0×</b> slower per training step than the parallel Transformer (342ms vs 85ms, batch 64) and ~8× slower than an Elman RNN at this scale on our 10-core CPU. Full BPTT through every loop iteration is the price of the paper's temporal-depth claim. The paper's counterargument is that its headline comparisons are <b>parameter</b>-matched, not FLOPs-matched — a ~10M RLT against a ~500M deep Transformer.</p>
+  <p class="fine">Also in RLT's favor: inference is loop-free (the trained weights run as a standard parallel Transformer), so the sequential cost is a training-time-only tax. Caveat: all runs executed 6-way parallel on one machine, so absolute milliseconds carry some contention; the <em>ratios</em> are stable across isolated spot-checks.</p>
+</section>
+<section id="verdict">
+  <h2>Verdict</h2>
+  <ol class="verdict" id="verdictList">
+    <li><b>The paper's central observation replicates: matched-size parallel Transformers fail at state tracking.</b> At ~77K params and an equal training budget, the Transformer sits at chance on parity and ~31% on five-state composition — while every recurrent model solves both. RLT's motivation is real.</li>
+    <li><b>But the fix is recurrence itself — not RLT's specific machinery.</b> A 1990 Elman RNN, with one tanh layer and no gates, hits 100% on both tasks including 4× length generalization. RLT-style solves the tasks too (and matches the paper's qualitative claims), but at this scale it is slower, seed-unstable on parity, and strictly dominated by the simplest recurrent baseline. Its encoder-memory/looped-depth machinery is a scale bet (10M+ params, L=48) that a 75K probe cannot validate — only the direction transfers.</li>
+    <li><b>Task construction and curriculum dominate these small-scale conclusions.</b> With dense running-target supervision, even the weakest recurrence generalizes to 4× its training length on five-state — the repo's published "everything crashes at 64 ops" result does not reproduce under our generator. And with sparse final-token supervision, nothing learns parity at all. Beware any single-task benchmark claiming architectural superiority.</li>
+    <li><b>The economics are the actual story.</b> RLT buys temporal depth that grows with the sequence (L·t blocks on the state path) and pays ~4× the training wall-clock of a parallel Transformer. Its inference is loop-free — the trained weights run as a standard Transformer — so the tax is training-only. Whether that trade is worth it depends entirely on how much you value parameter efficiency over training time, and at 75K params the honest answer is: a plain RNN is both cheaper and better.</li>
+  </ol>
+</section>
+</main>
+<footer class="foot">
+  <p>Built Sept 13, 2026 · RLT paper + repo analyzed from source (<a href="https://github.com/yifanzhang-pro/recurrent-looped-transformer">yifanzhang-pro/recurrent-looped-transformer</a>) · All benchmark code, raw JSON results, and charts live in <span class="mono">rlt-research/</span> — every number on this page is generated from <span class="mono">bench.py</span> runs, no hand-typed results.</p>
+</footer>
+<div id="tip"></div>
+<script>
+const MODELS=[
+ {id:"elman",name:"Elman RNN",yr:"1990",note:"Simplest recurrence: h<sub>t</sub> = tanh(W·h<sub>t−1</sub> + U·x<sub>t</sub>). One vector of state, no gates — proven too weak for long dependencies (Bengio et al. 1994: vanishing gradients).",color:"#c7cdd6"},
+ {id:"lstm",name:"LSTM",yr:"1997",note:"Hochreiter & Schmidhuber. Adds a gated memory cell: input/forget/output gates let gradients flow through thousands of steps. Dominated NLP for two decades.",color:"#aeb6c2"},
+ {id:"gru",name:"GRU",yr:"2014",note:"Cho et al. LSTM with merged gates and no separate cell state — same power, fewer parameters. The practical recurrent workhorse of seq2seq era.",color:"#949eae"},
+ {id:"transformer",name:"Transformer",yr:"2017",note:"Vaswani et al. 'Attention Is All You Need': abolish recurrence, read everything in parallel with self-attention. O(1) path length between any two tokens, but state tracking must emerge implicitly — composition over long chains remains its known weak spot.",color:"#6e7a8c"},
+ {id:"token_merge",name:"Token-merge (RLT ablation)",yr:"2026",note:"Our control: a recurrent decoder that merges each token embedding with its state and re-runs a stack with sliding-window self-attention — but no encoder memory, no cross-attention. Isolates what the <em>loop</em> alone buys.",color:"#e0a458"},
+ {id:"rlt",name:"RLT-style looped",yr:"2026",note:"Zhang's Recurrent Looped Transformer: causal encoder holds a global K/V memory; a looped decoder consumes tokens one at a time, re-running its full block stack each step with cross-attention to memory. Temporal depth grows with t.",color:"#2f6feb",hot:true},
+];
+const EXTRA=[
+ {yr:"1986",t:"Backpropagation through time",tag:"training",note:"Rumelhart, Hinton & Williams make training recurrent nets possible by unrolling them through time — the mechanism RLT's full-BPTT training still uses today."},
+ {yr:"1991",t:"Pipe / associative recall studies",tag:"theory",note:"Early work on gradient flow through long recurrent paths (Hochreiter's diploma thesis) quantifies exactly why vanilla recurrence fails: gradients vanish or explode over time."},
+ {yr:"2014",t:"Seq2seq + attention",tag:"bridge",note:"Sutskever encodes sequences into a vector; Bahdanau adds attention as a soft lookup over encoder states. The encoder-memory idea RLT later formalizes."},
+ {yr:"2016",t:"WaveNet / dilated convolutions",tag:"parallel",note:"Parallel processing with exponentially growing receptive fields — another answer to 'how to widen the state path without recurrence'."},
+ {yr:"2019",t:"Universal Transformers",tag:"loop",note:"Dehghani et al. apply the same weight-shared loop in <em>depth</em> (per token), with ACT adaptive halting. Proves weight-tied looping can beat fixed-depth Transformers on composition (SCAN) — RLT applies the loop in <em>time</em> instead."},
+ {yr:"2020",t:"GPT-3 scales the parallel bet",tag:"scale",note:"Massive parameters + data make fixed-depth parallel Transformers good enough at state tracking that the composition gap hides in the noise — until it doesn't (see 2024–25 'LLMs can't count' literature)."},
+ {yr:"2023",t:"Mamba / selective SSMs",tag:"linear",note:"Recurrent-like linear state spaces with input-dependent selection: O(T) compute, strong language modeling. The strongest linear-time rival; RLT instead keeps full attention and buys depth by looping."},
+ {yr:"2024",t:"Looped/weight-tied revival",tag:"loop",note:"A wave of papers (Huginn-0 'latent recurrent depth', recursion in reasoning models) show test-time depth loops improve reasoning — RLT is this idea pointed at state tracking, with an encoder-memory twist.",hot:true},
+];
+const DATA={tasks:{parity:{chance:50,label:"Parity (chance 50%)"},five:{chance:20,label:"Five-state (chance 20%)"}},
+ results:{
+  "parity|elman":{16:100.0, 32:100.0, 64:100.0, 128:100.0}, "five|elman":{16:91.5, 32:98.6, 64:99.9, 128:100.0},
+  "parity|lstm":{16:80.3, 32:81.2, 64:80.8, 128:80.7}, "five|lstm":{16:90.6, 32:98.7, 64:99.9, 128:100.0},
+  "parity|gru":{16:98.3, 32:98.3, 64:98.2, 128:98.1}, "five|gru":{16:90.8, 32:98.6, 64:99.9, 128:100.0},
+  "parity|transformer":{16:44.8, 32:46.9, 64:50.3, 128:49.2}, "five|transformer":{16:27.5, 32:37.3, 64:30.6, 128:31.4},
+  "parity|token_merge":{16:77.2, 32:76.4, 64:76.5, 128:77.3}, "five|token_merge":{16:93.2, 32:98.8, 64:99.9, 128:100.0},
+  "parity|rlt":{16:66.5, 32:67.0, 64:65.9, 128:66.8}, "five|rlt":{16:89.4, 32:98.4, 64:100.0, 128:100.0}
+}};
+const META={elman:{p:76416,ms:42}, lstm:{p:75648,ms:55}, gru:{p:78624,ms:49}, transformer:{p:77280,ms:85}, token_merge:{p:83552,ms:241}, rlt:{p:75000,ms:342}};
+const PUBLISHED={rlt:{parity:{16:100,32:100,64:82,128:60.8},five:{16:100,32:100,64:49,128:20.7}},
+ transformer:{parity:{16:98,32:72,64:50,128:48},five:{16:54,32:24,64:20,128:21}},
+ token_merge:{parity:{16:98,32:59,64:49,128:50},five:{16:50,32:23,64:20,128:20}}};
+// ---------- timeline ----------
+const tl=document.getElementById("timeline");
+tl.innerHTML=MODELS.map(m=>`<details${m.hot?" open":""}><summary><span class="yr">${m.yr}</span><span class="t">${m.name}</span><span class="tag${m.hot?" hot":""}">${m.hot?"new · viral":"landmark"}</span></summary><div class="body">${m.note}</div></details>`).join("")+
+EXTRA.map(e=>`<details><summary><span class="yr">${e.yr}</span><span class="t">${e.t}</span><span class="tag">${e.tag}</span></summary><div class="body">${e.note}</div></details>`).join("");
+// ---------- interactive bars ----------
+const OPS=[16,32,64,128];let task="parity";let sel=new Set([32,64]);
+const chips=document.getElementById("opsChips"),chartEl=document.getElementById("chart"),tip=document.getElementById("tip");
+function drawChips(){chips.innerHTML=OPS.map(o=>`<button class="chip${sel.has(o)?" on":""}" data-o="${o}"><span class="dot" style="background:${["#9db4d0","#7591b5","#4c6f9e","#26456e"][OPS.indexOf(o)]}"></span>${o} ops</button>`).join("");
+ chips.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{const o=+c.dataset.o;sel.has(o)?sel.delete(o):sel.add(o);if(!sel.size)sel.add(o);drawChips();drawChart();});}
+function drawChart(){const chance=DATA.tasks[task].chance;
+ chartEl.innerHTML=MODELS.map(m=>{const bars=OPS.map((o,i)=>{const v=DATA.results[`${task}|${m.id}`][o];const on=sel.has(o);
+  const hgt=Math.max(2,v*1.08);const chancey=Math.abs(v-chance)<3;
+  return `<div class="bar${on?"":" off"}${chancey?" chancey":""}" style="height:${hgt}px" data-m="${m.id}" data-o="${o}" data-v="${v}"><span class="v">${on?v.toFixed(1):""}</span></div>`;}).join("");
+  return `<div class="bgroup"><div class="blabel">${m.name}<small>${m.yr} · ${META[m.id].p.toLocaleString()} params</small></div><div class="bars">${bars}</div></div>`;}).join("");
+ chartEl.querySelectorAll(".bar").forEach(b=>{
+  b.onmousemove=e=>{tip.style.opacity=1;tip.style.left=e.clientX+12+"px";tip.style.top=e.clientY-8+"px";tip.textContent=`${b.dataset.m} · ${b.dataset.o} ops · ${(+b.dataset.v).toFixed(1)}%`;};
+  b.onmouseleave=()=>tip.style.opacity=0;});}
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));t.classList.add("on");task=t.dataset.task;drawChart();});
+drawChips();drawChart();
+// ---------- sortable results table ----------
+const TW=document.getElementById("tableWrap");
+let sortKey="id";
+function table(){const rows=MODELS.map(m=>{const r={id:m,name:m.name,yr:m.yr,params:META[m.id].p,ms:META[m.id].ms,hot:m.hot};
+ OPS.forEach(o=>{r["p"+o]=DATA.results[`parity|${m.id}`][o];r["f"+o]=DATA.results[`five|${m.id}`][o];});return r;});
+ rows.sort((a,b)=>typeof a[sortKey]==="string"?a[sortKey].localeCompare(b[sortKey]):a[sortKey]-b[sortKey]);
+ const th=(k,l)=>`<th data-k="${k}">${l}${sortKey===k?" ▾":""}</th>`;
+ TW.innerHTML=`<table id="resTab"><thead><tr>${th("name","Model")}${th("yr","Year")}${th("params","Params")}${th("ms","ms/step")}${th("p16","P16")}${th("p32","P32")}${th("p64","P64")}${th("p128","P128")}${th("f16","F16")}${th("f32","F32")}${th("f64","F64")}${th("f128","F128")}</tr></thead><tbody>${rows.map(r=>`<tr class="${r.hot?"hl":""}"><td>${r.name}${r.hot?" ★":""}</td><td>${r.yr}</td><td>${r.params.toLocaleString()}</td><td>${r.ms}</td>${[16,32,64,128].map(o=>cell(r["p"+o],50)).join("")}${[16,32,64,128].map(o=>cell(r["f"+o],20)).join("")}</tr>`).join("")}</tbody></table><p class="fine">P = parity accuracy (%) at evaluation length, F = five-state accuracy (%). Chance: 50 / 20. ★ = RLT-style. Click headers to sort. All values: mean of 3 seeds, <span class="mono">results/*.json</span>.</p>`;
+ TW.querySelectorAll("th").forEach(h=>h.onclick=()=>{sortKey=h.dataset.k;table();});}
+const cell=(v,ch)=>{const g=v-ch>=15,bb=Math.abs(v-ch)<3;return `<td class="${g?"g":bb?"b":""}">${v.toFixed(1)}</td>`;};
+table();
+// ---------- published vs ours ----------
+const PC=document.getElementById("pubCompare");
+const pcell=(pub,ours)=>{const d=ours-pub;const cls=d>5?"g":d<-5?"b":"";const sign=d>0?"+":"";
+ return `<td class="${cls}" title="ours − published = ${sign}${d.toFixed(1)}">${ours.toFixed(1)} <small class="muted">(${sign}${d.toFixed(0)})</small></td>`;};
+const pubRow=(m,label)=>["parity","five"].map(t=>[16,32,64,128].map(o=>`<td>${PUBLISHED[m][t][o]}</td>${pcell(PUBLISHED[m][t][o],DATA.results[`${t}|${m}`][o])}`).join("")).join("");
+PC.innerHTML=`<table><thead><tr><th rowspan="2">Model</th><th colspan="8" style="text-align:center;border-bottom:1px solid var(--line)">Parity acc %</th><th colspan="8" style="text-align:center;border-bottom:1px solid var(--line)">Five-state acc %</th></tr><tr>${[16,32,64,128].map(o=>`<th>P${o}</th><th title="ours vs published">Δo</th>`).join("")}${[16,32,64,128].map(o=>`<th>F${o}</th><th title="ours vs published">Δo</th>`).join("")}</tr></thead><tbody>
+<tr><td>RLT-style ★</td><td class="hl">${pubRow("rlt")}</td></tr>
+<tr><td>Transformer</td><td class="hl">${pubRow("transformer")}</td></tr>
+<tr><td>Token-merge</td><td class="hl">${pubRow("token_merge")}</td></tr></tbody></table>
+<p class="fine">Each cell: published value, then ours with green/red delta vs published. Green = our run beats the repo's number, red = falls short. Their study uses sparse final-token supervision (no FLOP matching); ours uses dense supervision on parity — so parity deltas partly reflect that curriculum choice.</p>`;
+</script>
